@@ -71,14 +71,7 @@ class PortfolioCoinWidget extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primary.withOpacity(0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Theme.of(context).colorScheme.primary,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -91,9 +84,12 @@ class PortfolioCoinWidget extends StatelessWidget {
       child: Center(
         child: Text(
           coin.symbol.toUpperCase(),
+          maxLines: 1,
+          textAlign: TextAlign.center,
           style: TextStyle(
             color: Theme.of(context).colorScheme.onPrimary,
             fontWeight: FontWeight.bold,
+
             fontSize: 14,
           ),
         ),

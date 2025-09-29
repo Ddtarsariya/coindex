@@ -1,0 +1,9 @@
+class CoinPriceModel {
+  final Map<String, double> price;
+
+  CoinPriceModel({required this.price});
+
+  factory CoinPriceModel.fromJson(Map<String, dynamic> json) {
+    return CoinPriceModel(price: json['price']);
+  }
+}

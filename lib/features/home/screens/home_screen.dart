@@ -48,24 +48,41 @@ class _HomeScreenState extends State<HomeScreen> {
         onRefresh: () async {
           context.read<PortfolioBloc>().add(RefreshPortfolioPrices());
         },
-        child: BlocBuilder<PortfolioBloc, PortfolioState>(
-          builder: (context, state) {
-            if (state is PortfolioCoinLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is PortfolioCoinLoaded) {
-              return CustomScrollView(
-                slivers: [
-                  _buildPortfolioSummary(state),
-                  if (state.coins.isNotEmpty)
-                    _buildPortfolioCoinsList(state)
-                  else
-                    _buildEmptyState(),
-                ],
-              );
-            } else if (state is PortfolioCoinError) {
-              return Center(child: Text(state.message));
-            }
-            return const SizedBox.shrink();
+        child: BlocBuilder<CoinBloc, CoinState>(
+          builder: (context, coinState) {
+            return BlocBuilder<PortfolioBloc, PortfolioState>(
+              builder: (context, portfolioState) {
+                // Show loading if coins are loading or portfolio is loading
+                if (coinState is CoinLoading ||
+                    portfolioState is PortfolioCoinLoading) {
+                  return _buildLoadingState();
+                }
+
+                // Show error if coins failed to load
+                if (coinState is CoinError) {
+                  return _buildErrorState(coinState.message);
+                }
+
+                // Show portfolio content if coins are loaded
+                if (coinState is CoinLoaded) {
+                  if (portfolioState is PortfolioCoinLoaded) {
+                    return CustomScrollView(
+                      slivers: [
+                        _buildPortfolioSummary(portfolioState),
+                        if (portfolioState.coins.isNotEmpty)
+                          _buildPortfolioCoinsList(portfolioState)
+                        else
+                          _buildEmptyState(),
+                      ],
+                    );
+                  } else if (portfolioState is PortfolioCoinError) {
+                    return _buildPortfolioErrorState(portfolioState.message);
+                  }
+                }
+
+                return const SizedBox.shrink();
+              },
+            );
           },
         ),
       ),
@@ -154,6 +171,75 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text('Loading...'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Failed to load coins: $message',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              context.read<CoinBloc>().add(FetchCoins());
+            },
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPortfolioErrorState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Portfolio Error: $message',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              context.read<PortfolioBloc>().add(FetchPortfolio());
+            },
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // -------- Functions --------
 
   Future<void> _showAddCoinSheet(BuildContext context) async {
@@ -165,9 +251,47 @@ class _HomeScreenState extends State<HomeScreen> {
       return showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        builder: (context) => BlocProvider.value(
-          value: portfolioBloc,
-          child: AddCoinSheetWidget(coins: state.coins),
+        backgroundColor: Colors.transparent,
+        enableDrag: true,
+        isDismissible: true,
+        useSafeArea: true,
+        builder: (context) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: BlocProvider.value(
+            value: portfolioBloc,
+            child: AddCoinSheetWidget(coins: state.coins),
+          ),
+        ),
+      );
+    } else if (state is CoinLoading) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Loading coins, please wait...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else if (state is CoinError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading coins: ${state.message}'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          action: SnackBarAction(
+            label: 'Retry',
+            onPressed: () {
+              context.read<CoinBloc>().add(FetchCoins());
+            },
+          ),
+        ),
+      );
+    } else {
+      // If coins haven't been fetched yet, fetch them
+      context.read<CoinBloc>().add(FetchCoins());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Loading coins...'),
+          duration: Duration(seconds: 2),
         ),
       );
     }

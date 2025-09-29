@@ -88,79 +88,81 @@ class _AddCoinSheetWidgetState extends State<AddCoinSheetWidget> {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
 
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.add_circle_outline,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Add Coin to Portfolio',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.add_circle_outline,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 28,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Text(
+                    'Add Coin to Portfolio',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          // Content
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Coin Selection Section
-                _buildSectionLabel('Select Coin', Icons.search),
-                const SizedBox(height: AppTheme.spacing8),
-                SearchableFieldWidget(
-                  allCoins: widget.coins,
-                  onSelect: _onCoinSelected,
-                ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Coin Selection Section
+                  _buildSectionLabel('Select Coin', Icons.search),
+                  const SizedBox(height: AppTheme.spacing8),
+                  SearchableFieldWidget(
+                    allCoins: widget.coins,
+                    onSelect: _onCoinSelected,
+                  ),
 
-                const SizedBox(height: AppTheme.spacing8),
+                  const SizedBox(height: AppTheme.spacing8),
 
-                // Selected Coin Display
-                if (_selectedCoin != null) ...[
-                  _buildSelectedCoinCard(),
+                  // Selected Coin Display
+                  if (_selectedCoin != null) ...[
+                    _buildSelectedCoinCard(),
+                    const SizedBox(height: AppTheme.spacing24),
+                  ],
+
+                  // Quantity Section
+                  _buildSectionLabel('Quantity', Icons.numbers),
+                  const SizedBox(height: AppTheme.spacing8),
+                  _buildQuantityField(),
+
+                  const SizedBox(height: AppTheme.spacing32),
+
+                  // Add Button
+                  _buildAddButton(),
+
                   const SizedBox(height: AppTheme.spacing24),
                 ],
-
-                // Quantity Section
-                _buildSectionLabel('Quantity', Icons.numbers),
-                const SizedBox(height: AppTheme.spacing8),
-                _buildQuantityField(),
-
-                const SizedBox(height: AppTheme.spacing32),
-
-                // Add Button
-                _buildAddButton(),
-
-                const SizedBox(height: AppTheme.spacing24),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -310,41 +312,29 @@ class _AddCoinSheetWidgetState extends State<AddCoinSheetWidget> {
   }
 
   Widget _buildAddButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: _isValid ? _addCoin : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _isValid
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.outline.withOpacity(0.3),
-          foregroundColor: _isValid
-              ? Theme.of(context).colorScheme.onPrimary
-              : Theme.of(context).colorScheme.outline,
-          elevation: _isValid ? 2 : 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _isValid
-                  ? (_isExistingCoin ? Icons.update : Icons.add_circle)
-                  : Icons.add_circle_outline,
-              size: 24,
-            ),
-            const SizedBox(width: AppTheme.spacing8),
-            Text(
-              _isValid
-                  ? (_isExistingCoin ? 'Update Portfolio' : 'Add to Portfolio')
-                  : 'Select Coin & Enter Quantity',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
+    return ElevatedButton.icon(
+      onPressed: _isValid ? _addCoin : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _isValid
+            ? Theme.of(context).colorScheme.primary
+            : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+        foregroundColor: _isValid
+            ? Theme.of(context).colorScheme.onPrimary
+            : Theme.of(context).colorScheme.outline,
+        elevation: _isValid ? 2 : 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      icon: Icon(
+        _isValid
+            ? (_isExistingCoin ? Icons.update : Icons.add_circle)
+            : Icons.add_circle_outline,
+        size: 24,
+      ),
+      label: Text(
+        _isValid
+            ? (_isExistingCoin ? 'Update Portfolio' : 'Add to Portfolio')
+            : 'Select Coin & Enter Quantity',
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );
   }
